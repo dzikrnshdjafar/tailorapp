@@ -1,11 +1,13 @@
 "use client"
 // pages/customers/index.tsx
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation'; // Tambahkan ini
 import CustomerTable from '../components/CustomerTable';
 
 const CustomerListPage = () => {
   const [clothingTypes, setClothingTypes] = useState<string[]>([]);
   const [selectedClothingType, setSelectedClothingType] = useState<string | null>(null);
+  const router = useRouter(); // Tambahkan ini
 
   // Fetch unique clothing types from customers data
   useEffect(() => {
@@ -28,6 +30,16 @@ const CustomerListPage = () => {
     fetchClothingTypes();
   }, []);
 
+  // Handler for navigation to add customer form
+  const handleAddCustomer = () => {
+    router.push('/customers/createcustomer'); // Navigasi ke halaman tambah pelanggan
+  };
+
+  // Handler for navigation to add customer form
+  const handleAddCustomerSize = () => {
+    router.push('/customers/createcustomersize'); // Navigasi ke halaman tambah pelanggan
+  };
+
   return (
     <div>
       <h1>Customer List</h1>
@@ -49,6 +61,24 @@ const CustomerListPage = () => {
             {type}
           </button>
         ))}
+      </div>
+
+      {/* Button to navigate to Add Customer form */}
+      <div className="mb-4">
+        <button
+          className="bg-green-500 text-white px-4 py-2 rounded"
+          onClick={handleAddCustomer} // Ketika tombol diklik, akan menuju ke halaman tambah customer
+        >
+          Add New Customer
+        </button>
+      </div>
+      <div className="mb-4">
+        <button
+          className="bg-green-500 text-white px-4 py-2 rounded"
+          onClick={handleAddCustomerSize} // Ketika tombol diklik, akan menuju ke halaman tambah customer
+        >
+          Add New Customer Size
+        </button>
       </div>
 
       {/* Customer Table filtered by selected clothing type */}
