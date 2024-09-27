@@ -1,7 +1,7 @@
-// CustomerTable.tsx
-"use client";
+"use client"
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Modal from "./Modal";
 
 interface Customer {
   id: number;
@@ -24,7 +24,7 @@ interface Customer {
 
 interface CustomerTableProps {
   clothingTypeFilter: string | null;
-  clothingTypes: any;
+  clothingTypes: string[];
 }
 
 const CustomerTable: React.FC<CustomerTableProps> = ({ clothingTypeFilter, clothingTypes }) => {
@@ -32,9 +32,9 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ clothingTypeFilter, cloth
   const [loading, setLoading] = useState(true);
   const [editingCustomerId, setEditingCustomerId] = useState<number | null>(null);
   const [editedSizes, setEditedSizes] = useState<{ [key: number]: string }>({});
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null); // Untuk Modal
+  const [showDetailModal, setShowDetailModal] = useState(false); // State untuk mengelola modal
   const router = useRouter();
-
-
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -58,7 +58,7 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ clothingTypeFilter, cloth
     };
 
     fetchCustomers();
-  }, [clothingTypeFilter]); // Re-fetch customers when clothingTypeFilter changes
+  }, [clothingTypeFilter]);
 
   const handleEditClick = (customerId: number) => {
     setEditingCustomerId(customerId);
@@ -83,18 +83,25 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ clothingTypeFilter, cloth
     const customer = customers.find((c) => c.id === customerId);
     if (!customer) return;
 
-    // Update sizes for the clothing type
-    const updatedSizes = customer.sizes
-      .filter((size) => size.clothingType.name === clothingTypeFilter || !clothingTypeFilter)
-      .map((size) => ({
-        sizeAttributeId: size.sizeAttribute.id,
-        sizeValue: parseFloat(editedSizes[size.id]) || size.sizeValue,
-      }));
+    const updatedSizesByClothingType = clothingTypes
+      .map((type) => {
+        const sizesForType = customer.sizes.filter(
+          (size) => size.clothingType.name === type
+        );
+        const sizes = sizesForType.map((size) => ({
+          sizeAttributeId: size.sizeAttribute.id,
+          sizeValue: parseFloat(editedSizes[size.id]) || size.sizeValue,
+        }));
+        return {
+          clothingTypeId: sizesForType[0]?.clothingType.id,
+          sizes: sizes,
+        };
+      })
+      .filter((clothingType) => clothingType.clothingTypeId);
 
     const body = {
       customerId,
-      clothingTypeId: customer.sizes[0]?.clothingType.id,
-      sizes: updatedSizes,
+      clothingTypes: updatedSizesByClothingType,
     };
 
     try {
@@ -116,9 +123,7 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ clothingTypeFilter, cloth
         };
 
         setCustomers((prevCustomers) =>
-          prevCustomers.map((c) =>
-            c.id === customerId ? updatedCustomer : c
-          )
+          prevCustomers.map((c) => (c.id === customerId ? updatedCustomer : c))
         );
 
         setEditingCustomerId(null);
@@ -135,6 +140,15 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ clothingTypeFilter, cloth
     setEditedSizes({});
   };
 
+  const handleDetailClick = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setShowDetailModal(true); // Tampilkan modal
+  };
+
+  const closeModal = () => {
+    setShowDetailModal(false);
+  };
+
   if (loading) {
     return <p>Loading customers...</p>;
   }
@@ -148,12 +162,22 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ clothingTypeFilter, cloth
             <th className="border border-gray-300 px-4 py-2">Name</th>
             <th className="border border-gray-300 px-4 py-2">Email</th>
             <th className="border border-gray-300 px-4 py-2">Phone</th>
-              {clothingTypes.map((type :string, index: string) => (
-            <th key={index} className="border border-gray-300 px-4 py-2">
-            Ukuran {type}
-        </th>
-        ))}
-            <th className="border border-gray-300 px-4 py-2"></th>
+            {clothingTypeFilter && (
+              <>
+                {customers.length > 0 &&
+                  customers[0].sizes
+                    .filter((size) => size.clothingType.name === clothingTypeFilter)
+                    .map((size) => (
+                      <th
+                        key={size.sizeAttribute.id}
+                        className="border border-gray-300 px-4 py-2"
+                      >
+                        {size.sizeAttribute.attributeName}
+                      </th>
+                    ))}
+              </>
+            )}
+            <th className="border border-gray-300 px-4 py-2">Aksi</th>
           </tr>
         </thead>
         <tbody>
@@ -162,48 +186,54 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ clothingTypeFilter, cloth
               <td className="border border-gray-300 px-4 py-2">{customer.name}</td>
               <td className="border border-gray-300 px-4 py-2">{customer.email}</td>
               <td className="border border-gray-300 px-4 py-2">{customer.phone}</td>
-              {customer.sizes
-                .filter(
-                  (size) =>
-                    !clothingTypeFilter ||
-                    size.clothingType.name === clothingTypeFilter
-                )
-                .map((size) => (
-                  <td key={size.id} className="border border-gray-300 px-4 py-2">
-                    {editingCustomerId === customer.id ? (
-                      <input
-                        type="number"
-                        value={editedSizes[size.id] || size.sizeValue.toString()}
-                        onChange={(e) => handleSizeChange(size.id, e.target.value)}
-                        className="border rounded px-2 py-1 w-full"
-                      />
-                    ) : (
-                      `${size.sizeValue} cm`
-                    )}
-                  </td>
-                ))}
+              {clothingTypeFilter &&
+                customer.sizes
+                  .filter((size) => size.clothingType.name === clothingTypeFilter)
+                  .map((size) => (
+                    <td key={size.id} className="border border-gray-300 px-4 py-2">
+                      {editingCustomerId === customer.id ? (
+                        <input
+                          type="number"
+                          value={editedSizes[size.id] || size.sizeValue.toString()}
+                          onChange={(e) => handleSizeChange(size.id, e.target.value)}
+                          className="border rounded px-2 py-1 w-full"
+                        />
+                      ) : (
+                        `${size.sizeValue} cm`
+                      )}
+                    </td>
+                  ))}
               <td className="border border-gray-300 px-4 py-2">
-                {editingCustomerId === customer.id ? (
-                  <>
+                {clothingTypeFilter ? (
+                  editingCustomerId === customer.id ? (
+                    <>
+                      <button
+                        onClick={() => handleSave(customer.id)}
+                        className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded mr-2"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={handleCancel}
+                        className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
                     <button
-                      onClick={() => handleSave(customer.id)}
-                      className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded mr-2"
+                      onClick={() => handleEditClick(customer.id)}
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded"
                     >
-                      Save
+                      Edit
                     </button>
-                    <button
-                      onClick={handleCancel}
-                      className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded"
-                    >
-                      Cancel
-                    </button>
-                  </>
+                  )
                 ) : (
                   <button
-                    onClick={() => handleEditClick(customer.id)}
-                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded"
+                    onClick={() => handleDetailClick(customer)}
+                    className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-3 rounded"
                   >
-                    Edit
+                    Detail
                   </button>
                 )}
               </td>
@@ -211,6 +241,11 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ clothingTypeFilter, cloth
           ))}
         </tbody>
       </table>
+
+      {showDetailModal && selectedCustomer && (
+  <Modal onClose={closeModal} customer={selectedCustomer} />
+)}
+
     </div>
   );
 };
