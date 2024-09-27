@@ -91,7 +91,7 @@ const AddCustomerSizePage = () => {
     };
   
     try {
-      const res = await fetch('/api/customersize', {
+      const res = await fetch('/api/customersize/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

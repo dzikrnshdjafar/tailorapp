@@ -1,6 +1,7 @@
-"use client"
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+// CustomerTable.tsx
+"use client";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 interface Customer {
   id: number;
@@ -8,7 +9,7 @@ interface Customer {
   email: string;
   phone: string;
   sizes: {
-    id: number; // Tambahkan ID untuk ukuran yang ingin dihapus
+    id: number;
     sizeValue: number;
     clothingType: {
       id: number;
@@ -23,134 +24,136 @@ interface Customer {
 
 interface CustomerTableProps {
   clothingTypeFilter: string | null;
+  clothingTypes: any;
 }
 
-const CustomerTable: React.FC<CustomerTableProps> = ({ clothingTypeFilter }) => {
+const CustomerTable: React.FC<CustomerTableProps> = ({ clothingTypeFilter, clothingTypes }) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [uniqueAttributesByClothingType, setUniqueAttributesByClothingType] = useState<Record<string, string[]>>({});
+  const [editingCustomerId, setEditingCustomerId] = useState<number | null>(null);
+  const [editedSizes, setEditedSizes] = useState<{ [key: number]: string }>({});
   const router = useRouter();
 
-  // Fetch customers from API
+
+
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
-        const res = await fetch('/api/customer');
+        const res = await fetch("/api/customer");
         const data = await res.json();
 
-        // Filter customers who have relevant clothingType sizes
+        // Filter customers by selected clothing type
         const filteredCustomers = data.filter((customer: Customer) =>
-          customer.sizes.some(size => !clothingTypeFilter || size.clothingType.name === clothingTypeFilter)
+          customer.sizes.some(
+            (size) =>
+              !clothingTypeFilter || size.clothingType.name === clothingTypeFilter
+          )
         );
         setCustomers(filteredCustomers);
-
-        // Extract unique size attributes per clothingType
-        const attributesByClothingType: Record<string, Set<string>> = {};
-        filteredCustomers.forEach((customer: Customer) => {
-          customer.sizes.forEach((size) => {
-            const clothingType = size.clothingType.name;
-            if (!attributesByClothingType[clothingType]) {
-              attributesByClothingType[clothingType] = new Set<string>();
-            }
-            attributesByClothingType[clothingType].add(size.sizeAttribute.attributeName);
-          });
-        });
-
-        // Convert to an object of arrays
-        const attributesByClothingTypeArr = Object.fromEntries(
-          Object.entries(attributesByClothingType).map(([clothingType, attributesSet]) => [
-            clothingType,
-            Array.from(attributesSet),
-          ])
-        );
-        setUniqueAttributesByClothingType(attributesByClothingTypeArr);
       } catch (error) {
-        console.error('Error fetching customers:', error);
+        console.error("Error fetching customers:", error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchCustomers();
-  }, [clothingTypeFilter]);
+  }, [clothingTypeFilter]); // Re-fetch customers when clothingTypeFilter changes
 
-  const handleDeleteSize = async (sizeId: number) => {
+  const handleEditClick = (customerId: number) => {
+    setEditingCustomerId(customerId);
+    const customer = customers.find((c) => c.id === customerId);
+    if (customer) {
+      const initialSizes = customer.sizes.reduce((acc, size) => {
+        acc[size.id] = size.sizeValue.toString();
+        return acc;
+      }, {} as { [key: number]: string });
+      setEditedSizes(initialSizes);
+    }
+  };
+
+  const handleSizeChange = (sizeId: number, value: string) => {
+    setEditedSizes((prevSizes) => ({
+      ...prevSizes,
+      [sizeId]: value,
+    }));
+  };
+
+  const handleSave = async (customerId: number) => {
+    const customer = customers.find((c) => c.id === customerId);
+    if (!customer) return;
+
+    // Update sizes for the clothing type
+    const updatedSizes = customer.sizes
+      .filter((size) => size.clothingType.name === clothingTypeFilter || !clothingTypeFilter)
+      .map((size) => ({
+        sizeAttributeId: size.sizeAttribute.id,
+        sizeValue: parseFloat(editedSizes[size.id]) || size.sizeValue,
+      }));
+
+    const body = {
+      customerId,
+      clothingTypeId: customer.sizes[0]?.clothingType.id,
+      sizes: updatedSizes,
+    };
+
     try {
-      const res = await fetch(`/api/customersize/${sizeId}`, {
-        method: 'DELETE',
+      const res = await fetch(`/api/customersize/update`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
       });
 
       if (res.ok) {
-        setCustomers(prevCustomers =>
-          prevCustomers.map(customer => ({
-            ...customer,
-            sizes: customer.sizes.filter(size => size.id !== sizeId),
-          }))
+        const updatedCustomer = {
+          ...customer,
+          sizes: customer.sizes.map((size) => ({
+            ...size,
+            sizeValue: parseFloat(editedSizes[size.id]) || size.sizeValue,
+          })),
+        };
+
+        setCustomers((prevCustomers) =>
+          prevCustomers.map((c) =>
+            c.id === customerId ? updatedCustomer : c
+          )
         );
+
+        setEditingCustomerId(null);
       } else {
-        console.error('Failed to delete size');
+        console.error("Failed to save sizes");
       }
     } catch (error) {
-      console.error('Error deleting size:', error);
+      console.error("Error updating sizes:", error);
     }
   };
 
-  const handleUpdateSize = (sizeId: number) => {
-    if (sizeId) {
-      router.push(`/customers/editcustomersize?id=${sizeId}`);
-    } else {
-      console.error('Size ID is not valid');
-    }
+  const handleCancel = () => {
+    setEditingCustomerId(null);
+    setEditedSizes({});
   };
-  
 
   if (loading) {
     return <p>Loading customers...</p>;
   }
 
-  if (customers.length === 0) {
-    return <p>No customers found for {clothingTypeFilter ? clothingTypeFilter : 'all types'}.</p>;
-  }
-
-  // Function to get the headers dynamically based on the clothingTypeFilter
-  const getHeaders = () => {
-    if (clothingTypeFilter) {
-      return uniqueAttributesByClothingType[clothingTypeFilter] || [];
-    } else {
-      // Return attributes for all clothing types if no filter
-      const allAttributes = new Set<string>();
-      Object.values(uniqueAttributesByClothingType).forEach((attributes) => {
-        attributes.forEach((attr) => allAttributes.add(attr));
-      });
-      return Array.from(allAttributes);
-    }
-  };
-
-  const headers = getHeaders();
-
   return (
     <div>
-      <h1>Customer List {clothingTypeFilter ? `for ${clothingTypeFilter}` : ''}</h1>
+      <h1>Customer List {clothingTypeFilter ? `for ${clothingTypeFilter}` : ""}</h1>
       <table className="table-auto w-full border-collapse border border-gray-300">
         <thead>
           <tr>
             <th className="border border-gray-300 px-4 py-2">Name</th>
             <th className="border border-gray-300 px-4 py-2">Email</th>
             <th className="border border-gray-300 px-4 py-2">Phone</th>
-            {clothingTypeFilter ? (
-              headers.map((header, index) => (
-                <th key={index} className="border border-gray-300 px-4 py-2">
-                  {header} (cm)
-                </th>
-              ))
-            ) : (
-              Object.keys(uniqueAttributesByClothingType).map((clothingType, index) => (
-                <th key={index} className="border border-gray-300 px-4 py-2">
-                  {clothingType}
-                </th>
-              ))
-            )}
-            <th className="border border-gray-300 px-4 py-2">Actions</th> {/* Column for actions */}
+              {clothingTypes.map((type :string, index: string) => (
+            <th key={index} className="border border-gray-300 px-4 py-2">
+            Ukuran {type}
+        </th>
+        ))}
+            <th className="border border-gray-300 px-4 py-2"></th>
           </tr>
         </thead>
         <tbody>
@@ -159,47 +162,49 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ clothingTypeFilter }) => 
               <td className="border border-gray-300 px-4 py-2">{customer.name}</td>
               <td className="border border-gray-300 px-4 py-2">{customer.email}</td>
               <td className="border border-gray-300 px-4 py-2">{customer.phone}</td>
-              {clothingTypeFilter ? (
-                headers.map((header, index) => {
-                  const size = customer.sizes.find(
-                    (s) =>
-                      s.sizeAttribute.attributeName === header &&
-                      s.clothingType.name === clothingTypeFilter
-                  );
-                  return (
-                    <td key={index} className="border border-gray-300 px-4 py-2">
-                      {size ? `${size.sizeValue} cm` : '-'}
-                    </td>
-                  );
-                })
-              ) : (
-                Object.keys(uniqueAttributesByClothingType).map((clothingType, index) => (
-                  <td key={index} className="border border-gray-300 px-4 py-2">
-                    {customer.sizes
-                      .filter((s) => s.clothingType.name === clothingType)
-                      .map((s) => `${s.sizeAttribute.attributeName}: ${s.sizeValue} cm`)
-                      .join(', ') || '-'}
+              {customer.sizes
+                .filter(
+                  (size) =>
+                    !clothingTypeFilter ||
+                    size.clothingType.name === clothingTypeFilter
+                )
+                .map((size) => (
+                  <td key={size.id} className="border border-gray-300 px-4 py-2">
+                    {editingCustomerId === customer.id ? (
+                      <input
+                        type="number"
+                        value={editedSizes[size.id] || size.sizeValue.toString()}
+                        onChange={(e) => handleSizeChange(size.id, e.target.value)}
+                        className="border rounded px-2 py-1 w-full"
+                      />
+                    ) : (
+                      `${size.sizeValue} cm`
+                    )}
                   </td>
-                ))
-              )}
+                ))}
               <td className="border border-gray-300 px-4 py-2">
-                {clothingTypeFilter && (
-                    <div>
-
-                  <button
-                    onClick={() => handleDeleteSize(customer.sizes[0]?.id ?? -1)} // Modify this to select the right size ID
-                    className="bg-red-500 text-white px-4 py-1 rounded"
+                {editingCustomerId === customer.id ? (
+                  <>
+                    <button
+                      onClick={() => handleSave(customer.id)}
+                      className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded mr-2"
                     >
-                    Delete
-                  </button>
-
+                      Save
+                    </button>
+                    <button
+                      onClick={handleCancel}
+                      className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
                   <button
-                  onClick={() => handleUpdateSize(customer.sizes[0]?.id ?? -1)} // Modify this to select the right size ID
-                  className="bg-yellow-500 text-white px-4 py-1 rounded"
+                    onClick={() => handleEditClick(customer.id)}
+                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded"
                   >
-                  Edit
-                </button>
-                    </div>
+                    Edit
+                  </button>
                 )}
               </td>
             </tr>

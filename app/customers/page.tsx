@@ -82,7 +82,7 @@ const CustomerListPage = () => {
       </div>
 
       {/* Customer Table filtered by selected clothing type */}
-      <CustomerTable clothingTypeFilter={selectedClothingType} />
+      <CustomerTable clothingTypeFilter={selectedClothingType} clothingTypes={clothingTypes} />
     </div>
   );
 };
