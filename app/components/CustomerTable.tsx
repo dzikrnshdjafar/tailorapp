@@ -153,6 +153,67 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ clothingTypeFilter, cloth
     return <p>Loading customers...</p>;
   }
 
+    // Fungsi untuk menghapus ukuran berdasarkan clothingType
+const handleDelete = async (customerId: number, clothingType: string) => {
+  const customer = customers.find((c) => c.id === customerId);
+  if (!customer) return;
+
+  // Dapatkan semua ukuran yang sesuai dengan clothingType
+  const sizesToDelete = customer.sizes
+    .filter((size) => size.clothingType.name === clothingType)
+    .map((size) => ({
+      sizeAttributeId: size.sizeAttribute.id,
+    }));
+
+  // Ambil clothingTypeId dari ukuran pertama yang sesuai
+  const clothingTypeId = customer.sizes.find(
+    (size) => size.clothingType.name === clothingType
+  )?.clothingType.id;
+
+  if (!clothingTypeId || sizesToDelete.length === 0) return;
+
+  const body = {
+    customerId,
+    clothingTypeId,
+    sizes: sizesToDelete, // Array of sizeAttributeId to be deleted
+  };
+
+  try {
+    const res = await fetch(`/api/customersize/delete`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (res.ok) {
+      // Update local state after deletion
+      setCustomers((prevCustomers) =>
+        prevCustomers.map((c) =>
+          c.id === customerId
+            ? {
+                ...c,
+                sizes: c.sizes.filter(
+                  (size) => size.clothingType.name !== clothingType
+                ),
+              }
+            : c
+        )
+      );
+    } else {
+      console.error("Failed to delete sizes");
+    }
+  } catch (error) {
+    console.error("Error deleting sizes:", error);
+  }
+};
+
+  
+    if (loading) {
+      return <p>Loading customers...</p>;
+    }
+
   return (
     <div>
       <h1>Customer List {clothingTypeFilter ? `for ${clothingTypeFilter}` : ""}</h1>
@@ -221,12 +282,21 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ clothingTypeFilter, cloth
                       </button>
                     </>
                   ) : (
+                    <>
                     <button
                       onClick={() => handleEditClick(customer.id)}
                       className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded"
-                    >
+                      >
                       Edit
                     </button>
+                    <button
+                      onClick={() => handleDelete(customer.id, clothingTypeFilter)} // Sebagai contoh, clothingType 'Pants'
+                      className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-3 rounded"
+                    >
+                      Delete
+                    </button>
+
+                    </>
                   )
                 ) : (
                   <button

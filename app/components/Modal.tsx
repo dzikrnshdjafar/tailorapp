@@ -35,6 +35,8 @@ const Modal: React.FC<ModalProps> = ({ onClose, customer }) => {
     return acc;
   }, {});
 
+  
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-white rounded-lg w-1/3 shadow-lg p-6 relative">
