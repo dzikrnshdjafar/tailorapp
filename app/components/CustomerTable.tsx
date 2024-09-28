@@ -95,9 +95,18 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ clothingTypeFilter, cloth
     }));
   };
 
-  const handleSave = async (customerId: number) => {
+  const handleSave = async (customerId: number, clothingType: string) => {
     const customer = customers.find((c) => c.id === customerId);
     if (!customer) return;
+
+    // Tambahkan konfirmasi sebelum penghapusan
+   const confirmUpdate = window.confirm(
+    `Yakin mo ubah ukuran ${clothingType} dari ${customer.name}?`
+  );
+
+  if (!confirmUpdate) {
+    return; // Batalkan jika pengguna memilih "Cancel"
+  }
 
     const updatedSizesByClothingType = clothingTypes
       .map((type) => {
@@ -240,47 +249,51 @@ const handleDelete = async (customerId: number, clothingType: string) => {
     }
 
   return (
-    <div>
-
-<input
-        type="text"
-        value={searchQuery}
-        onChange={(e) => handleSearch(e.target.value)}
-        placeholder="Search by name, email, or phone"
-        className="mb-4 p-2 border border-gray-300 rounded"
-      />
-
-      <h1>Customer List {clothingTypeFilter ? `for ${clothingTypeFilter}` : ""}</h1>
+    <div className="container mx-auto px-4 py-8">
+    <input
+      type="text"
+      value={searchQuery}
+      onChange={(e) => handleSearch(e.target.value)}
+      placeholder="Search by name, email, or phone"
+      className="mb-4 p-2 border border-gray-300 rounded w-full sm:w-1/2 lg:w-1/3"
+    />
+  
+    <h1 className="text-2xl font-bold mb-4">
+      Customer List {clothingTypeFilter ? `for ${clothingTypeFilter}` : ""}
+    </h1>
+  
+    <div className="overflow-x-auto">
       <table className="table-auto w-full border-collapse border border-gray-300">
         <thead>
           <tr>
-            <th className="border border-gray-300 px-4 py-2">Name</th>
-            <th className="border border-gray-300 px-4 py-2">Email</th>
-            <th className="border border-gray-300 px-4 py-2">Phone</th>
-            {clothingTypeFilter && (
-              <>
-                {customers.length > 0 &&
-                  customers[0].sizes
-                    .filter((size) => size.clothingType.name === clothingTypeFilter)
-                    .map((size) => (
-                      <th
-                        key={size.sizeAttribute.id}
-                        className="border border-gray-300 px-4 py-2"
-                      >
-                        {size.sizeAttribute.attributeName}
-                      </th>
-                    ))}
-              </>
-            )}
-            <th className="border border-gray-300 px-4 py-2">Aksi</th>
+            <th className="border border-gray-300 px-4 py-2 text-left">Name</th>
+            {!clothingTypeFilter && 
+            <>
+            <th className="border border-gray-300 px-4 py-2 text-left">Email</th>
+            <th className="border border-gray-300 px-4 py-2 text-left">Phone</th>
+            </>
+          }
+            {clothingTypeFilter && customers.length > 0 &&
+              customers[0].sizes
+              .filter((size) => size.clothingType.name === clothingTypeFilter)
+              .map((size) => (
+                <th key={size.sizeAttribute.id} className="border border-gray-300 px-4 py-2 text-left">
+                    {size.sizeAttribute.attributeName}
+                  </th>
+                ))}
+            <th className="border border-gray-300 px-4 py-2 text-left">Aksi</th>
           </tr>
         </thead>
         <tbody>
           {filteredCustomers.map((customer) => (
-            <tr key={customer.id}>
+            <tr key={customer.id} className="hover:bg-gray-100">
               <td className="border border-gray-300 px-4 py-2">{customer.name}</td>
+              {!clothingTypeFilter && 
+              <>
               <td className="border border-gray-300 px-4 py-2">{customer.email}</td>
               <td className="border border-gray-300 px-4 py-2">{customer.phone}</td>
+              </>
+              }
               {clothingTypeFilter &&
                 customer.sizes
                   .filter((size) => size.clothingType.name === clothingTypeFilter)
@@ -303,7 +316,7 @@ const handleDelete = async (customerId: number, clothingType: string) => {
                   editingCustomerId === customer.id ? (
                     <>
                       <button
-                        onClick={() => handleSave(customer.id)}
+                        onClick={() => handleSave(customer.id, clothingTypeFilter)}
                         className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded mr-2"
                       >
                         Save
@@ -319,13 +332,13 @@ const handleDelete = async (customerId: number, clothingType: string) => {
                     <>
                       <button
                         onClick={() => handleEditClick(customer.id)}
-                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded"
+                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold mr-2 py-1 px-3 rounded"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleDelete(customer.id, clothingTypeFilter)}
-                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-3 rounded"
+                        className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded"
                       >
                         Delete
                       </button>
@@ -344,12 +357,13 @@ const handleDelete = async (customerId: number, clothingType: string) => {
           ))}
         </tbody>
       </table>
-
-      {showDetailModal && selectedCustomer && (
-  <Modal onClose={closeModal} customer={selectedCustomer} />
-)}
-
     </div>
+  
+    {showDetailModal && selectedCustomer && (
+      <Modal onClose={closeModal} customer={selectedCustomer} />
+    )}
+  </div>
+  
   );
 };
 
