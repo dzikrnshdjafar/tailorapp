@@ -34,6 +34,7 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ clothingTypeFilter, cloth
   const [editedSizes, setEditedSizes] = useState<{ [key: number]: string }>({});
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null); // Untuk Modal
   const [showDetailModal, setShowDetailModal] = useState(false); // State untuk mengelola modal
+  const [searchQuery, setSearchQuery] = useState(""); // State untuk query pencarian
   const router = useRouter();
 
   useEffect(() => {
@@ -59,6 +60,21 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ clothingTypeFilter, cloth
 
     fetchCustomers();
   }, [clothingTypeFilter]);
+
+  // Fungsi pencarian
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+    // Filter customers berdasarkan searchQuery
+    const filteredCustomers = customers.filter((customer) => {
+      const lowercasedQuery = searchQuery.toLowerCase();
+      return (
+        customer.name.toLowerCase().includes(lowercasedQuery)
+        // || customer.email.toLowerCase().includes(lowercasedQuery) 
+        // || customer.phone.includes(lowercasedQuery)
+      );
+    });
 
   const handleEditClick = (customerId: number) => {
     setEditingCustomerId(customerId);
@@ -158,6 +174,15 @@ const handleDelete = async (customerId: number, clothingType: string) => {
   const customer = customers.find((c) => c.id === customerId);
   if (!customer) return;
 
+   // Tambahkan konfirmasi sebelum penghapusan
+   const confirmDelete = window.confirm(
+    `Yakin mo hapus ukuran ${clothingType} dari ${customer.name}?`
+  );
+
+  if (!confirmDelete) {
+    return; // Batalkan jika pengguna memilih "Cancel"
+  }
+
   // Dapatkan semua ukuran yang sesuai dengan clothingType
   const sizesToDelete = customer.sizes
     .filter((size) => size.clothingType.name === clothingType)
@@ -216,6 +241,15 @@ const handleDelete = async (customerId: number, clothingType: string) => {
 
   return (
     <div>
+
+<input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => handleSearch(e.target.value)}
+        placeholder="Search by name, email, or phone"
+        className="mb-4 p-2 border border-gray-300 rounded"
+      />
+
       <h1>Customer List {clothingTypeFilter ? `for ${clothingTypeFilter}` : ""}</h1>
       <table className="table-auto w-full border-collapse border border-gray-300">
         <thead>
@@ -242,7 +276,7 @@ const handleDelete = async (customerId: number, clothingType: string) => {
           </tr>
         </thead>
         <tbody>
-          {customers.map((customer) => (
+          {filteredCustomers.map((customer) => (
             <tr key={customer.id}>
               <td className="border border-gray-300 px-4 py-2">{customer.name}</td>
               <td className="border border-gray-300 px-4 py-2">{customer.email}</td>
@@ -283,19 +317,18 @@ const handleDelete = async (customerId: number, clothingType: string) => {
                     </>
                   ) : (
                     <>
-                    <button
-                      onClick={() => handleEditClick(customer.id)}
-                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded"
+                      <button
+                        onClick={() => handleEditClick(customer.id)}
+                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded"
                       >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(customer.id, clothingTypeFilter)} // Sebagai contoh, clothingType 'Pants'
-                      className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-3 rounded"
-                    >
-                      Delete
-                    </button>
-
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(customer.id, clothingTypeFilter)}
+                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-3 rounded"
+                      >
+                        Delete
+                      </button>
                     </>
                   )
                 ) : (
