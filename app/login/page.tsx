@@ -38,9 +38,10 @@ const LoginPage = () => {
       } else {
         setErrorMessage(data.message || 'Failed to login');
       }
-    } catch (_) { // Changed from `catch (error)`
+    } catch (error) {
       setErrorMessage('Something went wrong. Please try again.');
-    }
+      // Handle the error if necessary, e.g., console.log(error);
+    }    
   };
 
   return (
