@@ -5,7 +5,7 @@ const Home = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 flex flex-col justify-center text-center items-center text-white">
       <div className="bg-white bg-opacity-20 backdrop-blur-lg p-10 sm:p-10 lg:p-12 rounded-lg shadow-lg w-64 max-w-md sm:max-w-lg">
         <h1 className="text-4xl sm:text-5xl font-extrabold mb-10 tracking-wide">
-          OPIXXX TAILOR WEB
+          OPIXXX TAILOR WEB ✂️
         </h1>
         
         <Link href="/login">
