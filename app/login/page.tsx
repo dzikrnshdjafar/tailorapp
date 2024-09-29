@@ -38,63 +38,62 @@ const LoginPage = () => {
       } else {
         setErrorMessage(data.message || 'Failed to login');
       }
-    } catch (error) {
+    } catch (_) { // Changed from `catch (error)`
       setErrorMessage('Something went wrong. Please try again.');
     }
   };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-purple-600 to-blue-500">
-  <form onSubmit={handleLogin} className="w-64 max-w-sm bg-white bg-opacity-80 backdrop-blur-lg p-8 rounded-lg shadow-lg">
-    <h2 className="text-3xl font-extrabold text-center text-gray-800 mb-6">
-      Admin Login
-    </h2>
-    {errorMessage && (
-      <div className="bg-red-100 text-red-700 p-3 rounded mb-4 text-center">
-        {errorMessage}
-      </div>
-    )}
-    <div className="mb-4">
-      <label
-        htmlFor="username"
-        className="block text-sm font-medium text-gray-700"
-      >
-        Username
-      </label>
-      <input
-        id="username"
-        type="text"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-200 ease-in-out transform hover:scale-105"
-        required
-      />
+      <form onSubmit={handleLogin} className="w-64 max-w-sm bg-white bg-opacity-80 backdrop-blur-lg p-8 rounded-lg shadow-lg">
+        <h2 className="text-3xl font-extrabold text-center text-gray-800 mb-6">
+          Admin Login
+        </h2>
+        {errorMessage && (
+          <div className="bg-red-100 text-red-700 p-3 rounded mb-4 text-center">
+            {errorMessage}
+          </div>
+        )}
+        <div className="mb-4">
+          <label
+            htmlFor="username"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Username
+          </label>
+          <input
+            id="username"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-200 ease-in-out transform hover:scale-105"
+            required
+          />
+        </div>
+        <div className="mb-6">
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-200 ease-in-out transform hover:scale-105"
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 hover:shadow-lg transition duration-300 ease-in-out transform hover:scale-105"
+        >
+          Login
+        </button>
+      </form>
     </div>
-    <div className="mb-6">
-      <label
-        htmlFor="password"
-        className="block text-sm font-medium text-gray-700"
-      >
-        Password
-      </label>
-      <input
-        id="password"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-200 ease-in-out transform hover:scale-105"
-        required
-      />
-    </div>
-    <button
-      type="submit"
-      className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 hover:shadow-lg transition duration-300 ease-in-out transform hover:scale-105"
-    >
-      Login
-    </button>
-  </form>
-</div>
-
   );
 };
 

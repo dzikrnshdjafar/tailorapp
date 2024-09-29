@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import Modal from "./Modal";
 
 interface Customer {
@@ -35,7 +35,7 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ clothingTypeFilter, cloth
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isProcessing, setIsProcessing] = useState<number | null>(null); // State untuk melacak proses edit/delete
-  const router = useRouter();
+  // const router = useRouter();
 
   useEffect(() => {
     const fetchCustomers = async () => {

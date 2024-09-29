@@ -1,7 +1,7 @@
 import React from "react";
 
 interface ModalProps {
-  onClose: () => void; // Fungsi untuk menutup modal
+  onClose: () => void; // Function to close the modal
   customer: {
     id: number;
     name: string;
@@ -19,14 +19,32 @@ interface ModalProps {
         attributeName: string;
       };
     }[];
-  } | null; // Data customer yang akan ditampilkan di modal
+  } | null; // Customer data to be displayed in the modal
 }
 
-const Modal: React.FC<ModalProps> = ({ onClose, customer }) => {
-  if (!customer) return null; // Jika tidak ada customer, jangan tampilkan modal
+// Define types for Size and GroupedSizes
+type Size = {
+  id: number;
+  sizeValue: number;
+  clothingType: {
+    id: number;
+    name: string;
+  };
+  sizeAttribute: {
+    id: number;
+    attributeName: string;
+  };
+};
 
-  // Kelompokkan ukuran berdasarkan clothingType
-  const groupedSizes = customer.sizes.reduce((acc: { [key: string]: any[] }, size) => {
+type GroupedSizes = {
+  [key: string]: Size[];
+};
+
+const Modal: React.FC<ModalProps> = ({ onClose, customer }) => {
+  if (!customer) return null; // If no customer, do not display modal
+
+  // Group sizes by clothingType
+  const groupedSizes = customer.sizes.reduce((acc: GroupedSizes, size) => {
     const { name } = size.clothingType;
     if (!acc[name]) {
       acc[name] = [];
@@ -35,12 +53,10 @@ const Modal: React.FC<ModalProps> = ({ onClose, customer }) => {
     return acc;
   }, {});
 
-  
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-white rounded-lg w-1/3 shadow-lg p-6 relative">
-        {/* Tombol untuk menutup modal */}
+        {/* Button to close modal */}
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
@@ -48,7 +64,7 @@ const Modal: React.FC<ModalProps> = ({ onClose, customer }) => {
           ✕
         </button>
 
-        {/* Konten modal - informasi customer */}
+        {/* Modal content - customer information */}
         <h2 className="text-xl font-bold mb-4">Customer Detail</h2>
         <p><strong>Name:</strong> {customer.name}</p>
         <p><strong>Email:</strong> {customer.email}</p>
@@ -56,7 +72,7 @@ const Modal: React.FC<ModalProps> = ({ onClose, customer }) => {
 
         <h3 className="mt-4 font-semibold">Size Information</h3>
 
-        {/* Tampilkan tabel berdasarkan clothingType */}
+        {/* Display table based on clothingType */}
         {Object.keys(groupedSizes).map((clothingType) => (
           <div key={clothingType} className="mt-4">
             <h4 className="text-lg font-bold mb-2">{clothingType}</h4>
