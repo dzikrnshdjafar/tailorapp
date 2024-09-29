@@ -4,6 +4,17 @@ import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie'; // Import untuk mengelola cookies
 import CustomerTable from '../components/CustomerTable';
 
+// Mendefinisikan tipe data untuk Size dan Customer
+interface Size {
+  clothingType: {
+    name: string;
+  };
+}
+
+interface Customer {
+  sizes: Size[];
+}
+
 const CustomerListPage = () => {
   const [clothingTypes, setClothingTypes] = useState<string[]>([]);
   const [selectedClothingType, setSelectedClothingType] = useState<string | null>(null);
@@ -14,10 +25,10 @@ const CustomerListPage = () => {
     const fetchClothingTypes = async () => {
       try {
         const res = await fetch('/api/customer');
-        const data = await res.json();
+        const data: Customer[] = await res.json(); // Menggunakan tipe Customer di sini
         const types = new Set<string>();
-        data.forEach((customer: any) => {
-          customer.sizes.forEach((size: any) => {
+        data.forEach((customer) => {
+          customer.sizes.forEach((size) => {
             types.add(size.clothingType.name);
           });
         });
@@ -51,65 +62,64 @@ const CustomerListPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-  <h1 className="text-3xl font-bold text-center mb-6">Customer List</h1>
+      <h1 className="text-3xl font-bold text-center mb-6">Customer List</h1>
 
-  {/* Buttons for filtering by clothing type */}
-  <div className="mb-6 flex flex-wrap justify-center gap-2">
-    <button
-      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
-      onClick={() => setSelectedClothingType(null)}
-    >
-      All
-    </button>
-    {clothingTypes.map((type, index) => (
-      <button
-        key={index}
-        className={`px-4 py-2 rounded ${
-          selectedClothingType === type
-            ? 'bg-green-500 text-white'
-            : 'bg-gray-300 text-gray-800 hover:bg-gray-400 transition'
-        }`}
-        onClick={() => setSelectedClothingType(type)}
-      >
-        {type}
-      </button>
-    ))}
-  </div>
+      {/* Buttons for filtering by clothing type */}
+      <div className="mb-6 flex flex-wrap justify-center gap-2">
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+          onClick={() => setSelectedClothingType(null)}
+        >
+          All
+        </button>
+        {clothingTypes.map((type, index) => (
+          <button
+            key={index}
+            className={`px-4 py-2 rounded ${
+              selectedClothingType === type
+                ? 'bg-green-500 text-white'
+                : 'bg-gray-300 text-gray-800 hover:bg-gray-400 transition'
+            }`}
+            onClick={() => setSelectedClothingType(type)}
+          >
+            {type}
+          </button>
+        ))}
+      </div>
 
-  {/* Button to navigate to Add Customer form */}
-  <div className="mb-4 flex flex-col sm:flex-row justify-center gap-4">
-    <button
-      className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition w-full sm:w-auto"
-      onClick={handleAddCustomer}
-    >
-      Add New Customer
-    </button>
+      {/* Button to navigate to Add Customer form */}
+      <div className="mb-4 flex flex-col sm:flex-row justify-center gap-4">
+        <button
+          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition w-full sm:w-auto"
+          onClick={handleAddCustomer}
+        >
+          Add New Customer
+        </button>
 
-    {/* Button to navigate to Add Customer Size form */}
-    <button
-      className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition w-full sm:w-auto"
-      onClick={handleAddCustomerSize}
-    >
-      Add New Customer Size
-    </button>
-  </div>
+        {/* Button to navigate to Add Customer Size form */}
+        <button
+          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition w-full sm:w-auto"
+          onClick={handleAddCustomerSize}
+        >
+          Add New Customer Size
+        </button>
+      </div>
 
-  {/* Button for logout */}
-  <div className="mb-4 flex justify-center">
-    <button
-      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-      onClick={handleLogout}
-    >
-      Logout
-    </button>
-  </div>
+      {/* Button for logout */}
+      <div className="mb-4 flex justify-center">
+        <button
+          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+          onClick={handleLogout}
+        >
+          Logout
+        </button>
+      </div>
 
-  {/* Customer Table filtered by selected clothing type */}
-  <div className="overflow-x-auto">
-    <CustomerTable clothingTypeFilter={selectedClothingType} clothingTypes={clothingTypes} />
-  </div>
-</div>
-
+      {/* Customer Table filtered by selected clothing type */}
+      <div className="overflow-x-auto">
+        <CustomerTable clothingTypeFilter={selectedClothingType} clothingTypes={clothingTypes} />
+      </div>
+    </div>
   );
 };
 

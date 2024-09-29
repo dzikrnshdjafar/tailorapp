@@ -6,19 +6,20 @@ const prisma = new PrismaClient();
 export const GET = async () => {
   try {
     const customer = await prisma.customer.findMany({
-        include: {
-          sizes: {
-            include: {
-              clothingType: true,
-              sizeAttribute: true,
-            },
+      include: {
+        sizes: {
+          include: {
+            clothingType: true,
+            sizeAttribute: true,
           },
         },
-      });
-      return NextResponse.json(customer);
-    } catch (error) {
-      return NextResponse.json({ error: 'Error fetching sizes' }, { status: 500 });
-    } finally {
-      await prisma.$disconnect();
-    }
-  };
+      },
+    });
+    return NextResponse.json(customer);
+  } catch (error) {
+    console.error('Error fetching customer data:', error); // Logging error
+    return NextResponse.json({ error: 'Error fetching sizes' }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
+  }
+};
