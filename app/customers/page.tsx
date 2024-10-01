@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie'; // Import untuk mengelola cookies
 import CustomerTable from '../components/CustomerTable';
 
+
 // Mendefinisikan tipe data untuk Size dan Customer
 interface Size {
   clothingType: {
@@ -14,6 +15,9 @@ interface Size {
 interface Customer {
   sizes: Size[];
 }
+
+export const dynamic = "force-dynamic";
+
 
 const CustomerListPage = () => {
   const [clothingTypes, setClothingTypes] = useState<string[]>([]);
