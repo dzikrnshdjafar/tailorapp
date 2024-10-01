@@ -3,8 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-export const dynamic = "force-dynamic";
-
 const AddCustomerPage = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');

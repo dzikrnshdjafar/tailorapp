@@ -1,7 +1,5 @@
 import React from "react";
 
-export const dynamic = "force-dynamic";
-
 interface ModalProps {
   onClose: () => void; // Function to close the modal
   customer: {

@@ -4,8 +4,6 @@ import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie'; // Import untuk mengelola cookies
 import CustomerTable from '../components/CustomerTable';
 
-export const dynamic = "force-dynamic";
-
 // Mendefinisikan tipe data untuk Size dan Customer
 interface Size {
   clothingType: {

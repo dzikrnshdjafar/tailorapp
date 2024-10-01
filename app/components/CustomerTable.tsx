@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
+import React from "react";
 // import { useRouter } from "next/navigation";
 import Modal from "./Modal";
-
-export const dynamic = "force-dynamic";
 
 interface Customer {
   id: number;
